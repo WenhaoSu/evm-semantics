@@ -38,7 +38,8 @@ module EVM-SYMB-TESTING
           => <account>
                <acctID> ACCT </acctID>
                <code> CODE </code>
-              //todo <storage> has to contain `?_` Now it's much more restrictive .Map. Fix when performance is sorted out. 
+               <storage> ?STORAGE </storage>
+               <origStorage> ?STORAGE </origStorage>
                ...
              </account>
            )
