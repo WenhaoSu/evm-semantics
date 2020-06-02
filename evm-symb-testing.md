@@ -47,6 +47,7 @@ module EVM-SYMB-TESTING
          </accounts>
       ensures #rangeAddress(ACCT)
       andBool notBool ACCT in #precompiledAccounts(SCHED)
+      andBool #isValidStorage(?STORAGE)
 
     syntax EthereumCommand ::= "#assume" Bool
  // ------------------------------------------------------------
