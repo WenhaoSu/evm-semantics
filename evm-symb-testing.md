@@ -49,6 +49,15 @@ module EVM-SYMB-TESTING
       andBool notBool ACCT in #precompiledAccounts(SCHED)
       andBool #isValidStorage(?STORAGE)
 
+    syntax Bool ::= #isValidStorage( Map ) [function, functional]
+ // -------------------------------------------------------------
+    rule #isValidStorage( _ |-> VAL M ) => isInt(VAL) andBool #isValidStorage(M)
+    rule #isValidStorage( .Map )        => true
+
+    //#lookup() is always used for storage, thus all values are Int
+    rule #Ceil(#lookup(STORAGE, _))     => true
+      requires #isValidStorage(STORAGE)                                         [anywhere, simplification]
+
     syntax EthereumCommand ::= "#assume" Bool
  // ------------------------------------------------------------
     rule <k> #assume B => . ...</k>
