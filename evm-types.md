@@ -430,7 +430,6 @@ A cons-list is used for the EVM wordstack.
 
 ```{.k .symbolic}
     rule #Ceil(#lookup( _ |-> VAL M, KEY )) => {(#Ceil(#lookup( M, KEY )) andBool isInt(VAL)) #Equals true}  [anywhere]
-    rule #Ceil(#lookup( .Map, _ ))          => true                                                          [anywhere]
 ```
 
 -   `#sizeWordStack` calculates the size of a `WordStack`.
