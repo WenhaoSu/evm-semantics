@@ -502,10 +502,9 @@ Most of EVM data is held in local memory.
     syntax ByteArray ::= #range ( Memory , Int , Int )             [function, functional]
     syntax ByteArray ::= #range ( Memory , Int , Int , ByteArray ) [function, functional, klabel(#rangeAux)]
  // --------------------------------------------------------------------------------------------------------
-    rule [#range]:         #range(WM, START, WIDTH) => #range(WM, START +Int WIDTH -Int 1, WIDTH, .WordStack)
-    rule [#rangeAux.base]: #range(WM,           END, WIDTH, WS) => WS                                           requires notBool WIDTH >Int 0
-    rule [#rangeAux.none]: #range(WM,           END, WIDTH, WS) => #range(WM, END -Int 1, WIDTH -Int 1, 0 : WS) requires (WIDTH >Int 0) andBool notBool END in_keys(WM)
-    rule [#rangeAux.some]: #range(END |-> W WM, END, WIDTH, WS) => #range(WM, END -Int 1, WIDTH -Int 1, W : WS) requires (WIDTH >Int 0)
+    rule [#range]: #range(WM, START, WIDTH) => #range(WM, START +Int WIDTH -Int 1, WIDTH, .WordStack)
+    rule [#rangeAux.base]: #range(WM, END, WIDTH, WS) => WS requires notBool 0 <Int WIDTH
+    rule [#rangeAux.rec]:  #range(WM, END => END -Int 1, WIDTH => WIDTH -Int 1, WS => #lookupMemory(WM, END) : WS) requires 0 <Int WIDTH
 
     syntax Memory ::= ".Memory" [function]
  // --------------------------------------
@@ -615,7 +614,7 @@ The local memory of execution is a byte-array (instead of a word-array).
 
     syntax ByteArray ::= ByteArray "[" Int ".." Int "]" [function, functional, memo]
  // --------------------------------------------------------------------------------
-    rule WS [ START .. WIDTH ] => #take(WIDTH, #drop(START, WS))
+    rule [ByteArray.range]: WS [ START .. WIDTH ] => #take(WIDTH, #drop(START, WS))
 
     syntax Int ::= #sizeByteArray ( ByteArray ) [function, functional, smtlib(sizeByteArray), memo]
  // -----------------------------------------------------------------------------------------------
@@ -653,16 +652,21 @@ Addresses
     rule #addr(W) => W %Word pow160
 ```
 
--   `#lookup` looks up a key in a map and returns 0 if the key doesn't exist, otherwise returning its value.
+-   `#lookup*` looks up a key in a map and returns 0 if the key doesn't exist, otherwise returning its value.
+    It also makes sure the returned value is in the correct bitwidth, adjusting it if not.
 
 ```k
-    syntax Int ::= #lookup ( Map , Int ) [function, functional, smtlib(lookup)]
- // -----------------------------------------------
-    rule [#lookup.some]:       #lookup( (KEY |-> VAL:Int) M, KEY ) => VAL requires #rangeUInt(256, VAL)
-    rule [#lookup.none]:       #lookup(                   M, KEY ) => 0   requires notBool KEY in_keys(M)
-    //Impossible cases, for completeness
-    rule [#lookup.notInt]:     #lookup( (KEY |-> VAL    ) M, KEY ) => 0   requires notBool isInt(VAL)
-    rule [#lookup.outOfRange]: #lookup( (KEY |-> VAL:Int) M, KEY ) => 0   requires notBool #rangeUInt(256, VAL)
+    syntax Int ::= #lookup        ( Map , Int ) [function, functional, smtlib(lookup)]
+                 | #lookupMemory  ( Map , Int ) [function, functional]
+ // ------------------------------------------------------------------
+    rule [#lookup.some]:   #lookup( (KEY |-> VAL:Int) M, KEY ) => VAL modInt pow256
+    rule [#lookup.none]:   #lookup(                   M, KEY ) => 0                 requires notBool KEY in_keys(M)
+    //Impossible case, for completeness
+    rule [#lookup.notInt]: #lookup( (KEY |-> VAL    ) M, KEY ) => 0                 requires notBool isInt(VAL)
+
+    rule [#lookupMemory.some]:   #lookupMemory( (KEY |-> VAL:Int) M, KEY ) => VAL modInt 256
+    rule [#lookupMemory.none]:   #lookupMemory(                   M, KEY ) => 0              requires notBool KEY in_keys(M)
+    rule [#lookupMemory.notInt]: #lookupMemory( (KEY |-> VAL    ) M, KEY ) => 0              requires notBool isInt(VAL)
 ```
 
 ### Substate Log
