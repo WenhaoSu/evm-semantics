@@ -108,6 +108,7 @@ These can be used for pattern-matching on the LHS of rules as well (`macro` attr
 
     syntax Bool ::= "#range" "(" Int "<"  Int "<"  Int ")"
                   | "#range" "(" Int "<"  Int "<=" Int ")"
+                  | "#range" "(" Int "<"  Int "<=" Int ")"
                   | "#range" "(" Int "<=" Int "<"  Int ")"
                   | "#range" "(" Int "<=" Int "<=" Int ")"
  // ------------------------------------------------------
@@ -659,8 +660,8 @@ Addresses
     syntax Int ::= #lookup        ( Map , Int ) [function, functional, smtlib(lookup)]
                  | #lookupMemory  ( Map , Int ) [function, functional, smtlib(lookupMemory)]
  // ----------------------------------------------------------------------------------------
-    rule [#lookup.some]:       #lookup( (KEY |-> VAL:Int) M, KEY ) => VAL requires          0 <=Int VAL andBool VAL <Int pow256
-    rule [#lookup.outOfRange]: #lookup( (KEY |-> VAL:Int) M, KEY ) => 0   requires notBool (0 <=Int VAL andBool VAL <Int pow256)
+    rule [#lookup.some]:       #lookup( (KEY |-> VAL:Int) M, KEY ) => VAL requires #rangeUInt(256, VAL)
+    rule [#lookup.outOfRange]: #lookup( (KEY |-> VAL:Int) M, KEY ) => 0   requires notBool #rangeUInt(256, VAL)
     rule [#lookup.none]:       #lookup(                   M, KEY ) => 0   requires notBool KEY in_keys(M)
     //Impossible case, for completeness
     rule [#lookup.notInt]:     #lookup( (KEY |-> VAL    ) M, KEY ) => 0   requires notBool isInt(VAL)
