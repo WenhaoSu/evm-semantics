@@ -10,7 +10,7 @@ module EVM-SYMB-TESTING
     imports EDSL
 
     configuration
-      <kevm-specs>
+      <kevm-specs unused="true">
         <kevm/>
         <testerAcctId>   0          </testerAcctId>
         <testerBytecode> .ByteArray </testerBytecode>
@@ -32,7 +32,7 @@ module EVM-SYMB-TESTING
 
     rule <k> #loadBytecode ACCT CODE => . ...</k>
          <schedule> SCHED </schedule>
-         <activeAccounts> ACCTS:Set (.Set => SetItem(ACCT)) </activeAccounts>
+         <activeAccounts> _:Set (.Set => SetItem(ACCT)) </activeAccounts>
          <accounts>
            ( .Bag
           => <account>
@@ -83,7 +83,7 @@ module EVM-SYMB-TESTING
  // -------------------------------------------------------------
 
     //function new_ERC20_with_arbitrary_storage() external returns (ERC20)
-    rule <k> CALL _ TESTER_ACCT 0 ARGSTART ARGWIDTH RETSTART RETWIDTH
+    rule <k> CALL _ TESTER_ACCT 0 ARGSTART _ARGWIDTH RETSTART RETWIDTH
           //=> #assume notBool ?ACCT in ActiveAccts //Intended version. Doesn't work even after this fix: https://github.com/kframework/kore/issues/1183
           => #assume notBool ?ACCT in ActiveAccts
           ~> #loadERC20Bytecode ?ACCT
@@ -98,7 +98,7 @@ module EVM-SYMB-TESTING
       [priority(40)] //Higher than normal
 
     //function create_symbolic_address() external returns (address)
-    rule <k> CALL _ TESTER_ACCT 0 ARGSTART ARGWIDTH RETSTART RETWIDTH
+    rule <k> CALL _ TESTER_ACCT 0 ARGSTART _ARGWIDTH RETSTART RETWIDTH
           => #assume #rangeAddress(?ACCT:Int)
           ~> 1 ~> #push ~> #setLocalMem RETSTART RETWIDTH #buf(32, ?ACCT)
          ...
@@ -110,7 +110,7 @@ module EVM-SYMB-TESTING
       [priority(40)]
 
     //function create_symbolic_uint256() external returns (uint256)
-    rule <k> CALL _ TESTER_ACCT 0 ARGSTART ARGWIDTH RETSTART RETWIDTH
+    rule <k> CALL _ TESTER_ACCT 0 ARGSTART _ARGWIDTH RETSTART RETWIDTH
           => #assume #rangeUInt(256, ?SYMB_INT:Int)
           ~> 1 ~> #push ~> #setLocalMem RETSTART RETWIDTH #buf(32, ?SYMB_INT)
          ...
@@ -139,7 +139,7 @@ module EVM-SYMB-TESTING
       [priority(40)]
 */
 
-    rule <k> CALL _ TESTER_ACCT 0 ARGSTART ARGWIDTH RETSTART RETWIDTH
+    rule <k> CALL _ TESTER_ACCT 0 ARGSTART _ARGWIDTH RETSTART RETWIDTH
           => #getStorageAt(#asWord(#range(LM, ARGSTART +Int 4, 32)), #asWord(#range(LM, ARGSTART +Int 36, 32)), RETSTART, RETWIDTH)
          ...
          </k>
@@ -161,7 +161,7 @@ module EVM-SYMB-TESTING
          </account>
 
     //function assume(bool) external
-    rule <k> CALL _ TESTER_ACCT 0 ARGSTART ARGWIDTH RETSTART RETWIDTH
+    rule <k> CALL _ TESTER_ACCT 0 ARGSTART _ARGWIDTH RETSTART RETWIDTH
               //argument value #buf(32, 1) means true
           => #assume #range(LM, ARGSTART +Int 4, 32) ==K #buf(32, 1)
           ~> 1 ~> #push ~> #setLocalMem RETSTART RETWIDTH #buf(32, 0)
@@ -178,7 +178,7 @@ module EVM-SYMB-TESTING
  // -------------------------------------------------------------
 
     //Hack to disable gas computation
-    rule <k> #gas [ OP , AOP ] => . ...</k> [priority(40)]
+    rule <k> #gas [ _OP , _AOP ] => . ...</k> [priority(40)]
 
     //Hack to disable <touchedAccounts> logic
     rule <k> #mkCall ACCTFROM ACCTTO ACCTCODE BYTES APPVALUE ARGS STATIC:Bool
